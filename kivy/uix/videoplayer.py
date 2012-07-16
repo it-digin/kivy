@@ -2,11 +2,11 @@
 Video player
 ============
 
-.. versionadded:: 1.1.2
+.. versionadded:: 1.2.0
 
 The video player widget can be used to play video and let the user control the
-play/pause, volume and seek. The widget cannot be customized a lot, due to the
-complex assembly of lot of base widgets.
+play/pause, volume and seek. The widget cannot be customized much, because
+of the complex assembly of numerous base widgets.
 
 .. image:: images/videoplayer.jpg
     :align: center
@@ -14,13 +14,14 @@ complex assembly of lot of base widgets.
 Annotations
 -----------
 
-If you want to display some texts at a specific time, duration, you might want
-to look at annotations.  An annotation file have a ".jsa" extension. The player
-will automatically load the associated annotation file if exists.
+If you want to display text at a specific time and duration, consider
+annotations.  An annotation file has a ".jsa" extension. The player
+will automatically load the associated annotation file if it exists.
 
-It's a JSON based file, that provide a list of label dictionnary. The key and
-value must match one of the :class:`VideoPlayerAnnotation`. For example, here is
-a short version of a jsa that you can found in `examples/widgets/softboy.jsa`::
+The annotation file is JSON-based, providing a list of label dictionary items.
+The key and value must match one of the :class:`VideoPlayerAnnotation` items.
+For example, here is a short version of a jsa file that you can find in
+`examples/widgets/softboy.jsa`::
 
 
     [
@@ -31,12 +32,12 @@ a short version of a jsa that you can found in `examples/widgets/softboy.jsa`::
         "text": "You can change the background color"}
     ]
 
-On our softboy.avi example, it will look like this:
+For our softboy.avi example, the result will be:
 
 .. image:: images/videoplayer-annotation.jpg
     :align: center
 
-If you want to test how annotations file are working, test with::
+If you want to experiment with annotation files, test with::
 
     python -m kivy.uix.videoplayer examples/widgets/softboy.avi
 
@@ -44,11 +45,12 @@ Fullscreen
 ----------
 
 The video player can play the video in fullscreen, if
-:data:`VideoPlayer.allow_fullscreen` is activated, when the user double-tap on
+:data:`VideoPlayer.allow_fullscreen` is activated by a double-tap on
 the video. By default, if the video is smaller than the Window, it will be not
 stretched.
 
-You can allow it by passing custom options to :class:`~kivy.uix.video.Video` instance:
+You can allow stretching by passing custom options to a
+:class:`~kivy.uix.video.Video` instance::
 
     player = VideoPlayer(source='myvideo.avi', play=True,
         options={'allow_stretch': True})
@@ -131,27 +133,29 @@ class VideoPlayerProgressBar(ProgressBar):
             seek=self._update_bubble)
 
     def on_video(self, instance, value):
-        self.video.bind(position=self._update_bubble, play=self._showhide_bubble)
+        self.video.bind(position=self._update_bubble,
+                play=self._showhide_bubble)
 
     def on_touch_down(self, touch):
         if not self.collide_point(*touch.pos):
             return
         self._show_bubble()
         touch.grab(self)
-        touch.ud[self.uid] = self._update_seek(touch.x)
+        self._update_seek(touch.x)
         return True
 
     def on_touch_move(self, touch):
         if touch.grab_current is not self:
             return
-        touch.ud[self.uid] = self._update_seek(touch.x)
+        self._update_seek(touch.x)
         return True
 
     def on_touch_up(self, touch):
         if touch.grab_current is not self:
             return
         touch.ungrab(self)
-        self.video.seek(self.seek)
+        if self.seek:
+            self.video.seek(self.seek)
         self.seek = None
         self._hide_bubble()
         return True
@@ -227,7 +231,7 @@ class VideoPlayerAnnotation(Label):
     '''
 
     duration = NumericProperty(1)
-    '''Duration of the annotation
+    '''Duration of the annotation.
 
     :data:`duration` is a :class:`~kivy.properties.NumericProperty`, default to
     1
@@ -241,39 +245,42 @@ class VideoPlayerAnnotation(Label):
 
 
 class VideoPlayer(GridLayout):
-    '''VideoPlayer class, see module documentation for more information.
+    '''VideoPlayer class. See module documentation for more information.
     '''
 
     source = StringProperty(None)
-    '''Source of the video to read
+    '''Source of the video to read.
 
     :data:`source` a :class:`~kivy.properties.StringProperty`, default to None.
     '''
 
     thumbnail = StringProperty(None)
-    '''Thumbnail of the video to show. If None, it will try to search the thumbnail from the :data:`source` + .png.
+    '''Thumbnail of the video to show. If None, VideoPlayer will try to find
+    the thumbnail from the :data:`source` + .png.
 
-    :data:`thumbnail` a :class:`~kivy.properties.StringProperty`, default to None.
+    :data:`thumbnail` a :class:`~kivy.properties.StringProperty`, default to
+    None.
     '''
 
     duration = NumericProperty(-1)
-    '''Duration of the video. The duration is default to -1, and set to real
-    duration when the video is loaded.
+    '''Duration of the video. The duration defaults to -1, and is set to the
+    real duration when the video is loaded.
 
     :data:`duration` is a :class:`~kivy.properties.NumericProperty`, default to
     -1.
     '''
 
     position = NumericProperty(0)
-    '''Position of the video between 0 and :data:`duration`. The position is
-    default to -1, and set to real position when the video is loaded.
+    '''Position of the video between 0 and :data:`duration`. The position
+    defaults to -1, and is set to the real position when the video is loaded.
 
     :data:`position` is a :class:`~kivy.properties.NumericProperty`, default to
     -1.
     '''
 
     volume = NumericProperty(1.0)
-    '''Volume of the video, in the range 0-1. 1 mean full volume, 0 mean mute.
+    '''Volume of the video, in the range 0-1. 1 means full volume, 0 means
+    mute.
 
     :data:`volume` is a :class:`~kivy.properties.NumericProperty`, default to
     1.
@@ -295,8 +302,10 @@ class VideoPlayer(GridLayout):
     False.
     '''
 
-    image_overlay_play = StringProperty('atlas://data/images/defaulttheme/player-play-overlay')
-    '''Image filename used to show an "play" overlay when the video is not yet started.
+    image_overlay_play = StringProperty(
+            'atlas://data/images/defaulttheme/player-play-overlay')
+    '''Image filename used to show a "play" overlay when the video is not yet
+    started.
 
     :data:`image_overlay_play` a :class:`~kivy.properties.StringProperty`
     '''
@@ -307,37 +316,43 @@ class VideoPlayer(GridLayout):
     :data:`image_loading` a :class:`~kivy.properties.StringProperty`
     '''
 
-    image_play = StringProperty('atlas://data/images/defaulttheme/media-playback-start')
+    image_play = StringProperty(
+            'atlas://data/images/defaulttheme/media-playback-start')
     '''Image filename used for the "Play" button.
 
     :data:`image_loading` a :class:`~kivy.properties.StringProperty`
     '''
 
-    image_pause = StringProperty('atlas://data/images/defaulttheme/media-playback-pause')
+    image_pause = StringProperty(
+            'atlas://data/images/defaulttheme/media-playback-pause')
     '''Image filename used for the "Pause" button.
 
     :data:`image_pause` a :class:`~kivy.properties.StringProperty`
     '''
 
-    image_volumehigh = StringProperty('atlas://data/images/defaulttheme/audio-volume-high')
+    image_volumehigh = StringProperty(
+            'atlas://data/images/defaulttheme/audio-volume-high')
     '''Image filename used for the volume icon, when the volume is high.
 
     :data:`image_volumehigh` a :class:`~kivy.properties.StringProperty`
     '''
 
-    image_volumemedium = StringProperty('atlas://data/images/defaulttheme/audio-volume-medium')
+    image_volumemedium = StringProperty(
+            'atlas://data/images/defaulttheme/audio-volume-medium')
     '''Image filename used for the volume icon, when the volume is medium.
 
     :data:`image_volumemedium` a :class:`~kivy.properties.StringProperty`
     '''
 
-    image_volumelow = StringProperty('atlas://data/images/defaulttheme/audio-volume-low')
+    image_volumelow = StringProperty(
+            'atlas://data/images/defaulttheme/audio-volume-low')
     '''Image filename used for the volume icon, when the volume is low.
 
     :data:`image_volumelow` a :class:`~kivy.properties.StringProperty`
     '''
 
-    image_volumemuted = StringProperty('atlas://data/images/defaulttheme/audio-volume-muted')
+    image_volumemuted = StringProperty(
+            'atlas://data/images/defaulttheme/audio-volume-muted')
     '''Image filename used for the volume icon, when the volume is muted.
 
     :data:`image_volumemuted` a :class:`~kivy.properties.StringProperty`
@@ -348,17 +363,19 @@ class VideoPlayer(GridLayout):
     '''
 
     fullscreen = BooleanProperty(False)
-    '''Switch to a fullscreen view. This must be used with care. When activated,
-    the widget will remove itself from its parent, remove all children from the
-    window and add itself to it. When fullscreen is unset, all the previous
-    children are restored, and the widget is readded to its previous parent.
+    '''Switch to control fullscreen view. This must be used with care. When
+    activated, the widget will remove itself from its parent, remove all
+    children from the window, and will add itself to it. When fullscreen is
+    unset, all the previous children are restored, and the widget is reset to
+    its previous parent.
 
     .. warning::
 
-        The re-add operation doesn't care about it's children index position
-        within the parent.
+        The re-add operation doesn't care about the index position of it's
+        children within the parent.
 
-    :data:`fullscreen` a :class:`~kivy.properties.BooleanProperty`, default to False
+    :data:`fullscreen` a :class:`~kivy.properties.BooleanProperty`, default to
+    False
     '''
 
     allow_fullscreen = BooleanProperty(True)
@@ -370,7 +387,7 @@ class VideoPlayer(GridLayout):
     '''
 
     options = DictProperty({})
-    '''Optionals parameters can be passed to :class:`~kivy.uix.video.Video`
+    '''Optional parameters can be passed to :class:`~kivy.uix.video.Video`
     instance with this property.
 
     :data:`options` a :class:`~kivy.properties.DictProperty`,
@@ -420,12 +437,14 @@ class VideoPlayer(GridLayout):
                 self._annotations = load(fd)
         if self._annotations:
             for ann in self._annotations:
-                self._annotations_labels.append(VideoPlayerAnnotation(annotation=ann))
+                self._annotations_labels.append(
+                    VideoPlayerAnnotation(annotation=ann))
 
     def on_play(self, instance, value):
         if self._video is None:
             self._video = Video(source=self.source, play=True,
-                    volume=self.volume, pos_hint={'x': 0, 'y': 0}, **self.options)
+                    volume=self.volume, pos_hint={'x': 0, 'y': 0},
+                    **self.options)
             self._video.bind(texture=self._play_started,
                     duration=self.setter('duration'),
                     position=self.setter('position'),
@@ -456,7 +475,7 @@ class VideoPlayer(GridLayout):
 
         .. warning::
 
-            Calling seek() before video is loaded have no impact.
+            Calling seek() before video is loaded has no impact.
         '''
         if not self._video:
             return

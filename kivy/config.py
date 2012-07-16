@@ -37,7 +37,7 @@ Available configuration tokens
     * windows icons are not copied to user directory anymore. You can still set
       a new window icon by using ``window_icon`` config setting.
 
-.. versionchanged:: 1.1.2
+.. versionchanged:: 1.2.0
 
     * `resizable` has been added to graphics section
 
@@ -205,6 +205,12 @@ class ConfigParser(PythonConfigParser):
         self.filename = filename
         PythonConfigParser.read(self, filename)
 
+    def set(self, section, option, value):
+        '''Functions similarly to PythonConfigParser's set method, except that
+        the value is implicitly converted to a string.
+        '''
+        return PythonConfigParser.set(self, section, option, str(value))
+
     def setdefaults(self, section, keyvalues):
         '''Set a lot of keys/values in one section at the same time
         '''
@@ -263,7 +269,9 @@ if not 'KIVY_DOC_INCLUDE' in environ:
     Config = ConfigParser()
 
     # Read config file if exist
-    if exists(kivy_config_fn) and not 'KIVY_USE_DEFAULTCONFIG' in environ:
+    if exists(kivy_config_fn) and \
+        'KIVY_USE_DEFAULTCONFIG' not in environ and \
+        'KIVY_NO_CONFIG' not in environ:
         try:
             Config.read(kivy_config_fn)
         except Exception, e:
@@ -282,7 +290,7 @@ if not 'KIVY_DOC_INCLUDE' in environ:
 
     # Upgrade default configuration until we have the current version
     need_save = False
-    if version != KIVY_CONFIG_VERSION:
+    if version != KIVY_CONFIG_VERSION and 'KIVY_NO_CONFIG' not in environ:
         Logger.warning('Config: Older configuration version detected'
                        ' (%d instead of %d)' % (
                             version, KIVY_CONFIG_VERSION))
@@ -396,7 +404,8 @@ if not 'KIVY_DOC_INCLUDE' in environ:
         Logger.logfile_activated = True
 
     # If no configuration exist, write the default one.
-    if not exists(kivy_config_fn) or need_save:
+    if (not exists(kivy_config_fn) or need_save) and \
+        'KIVY_NO_CONFIG' not in environ:
         try:
             Config.filename = kivy_config_fn
             Config.write()

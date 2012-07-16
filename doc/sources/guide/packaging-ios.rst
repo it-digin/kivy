@@ -1,9 +1,9 @@
 .. _packaging_ios:
 
-.. versionadded:: 1.1.2
-
 Create a package for IOS
 ========================
+
+.. versionadded:: 1.2.0
 
 .. warning::
 
@@ -16,8 +16,20 @@ The overall method for creating a package on IOS can be explained in 4 steps:
 #. Populate the Xcode project with your application source code
 #. Customize
 
-The current method have been tested with Xcode 4.2.
+The current method have been tested with Xcode 4.2
 
+Prerequisites
+-------------
+
+You need to install some dependencies, like cython or mercurial. If you're
+using Xcode 4.3, then you also need to install autotools. We encourage you to
+use `Homebrew <http://mxcl.github.com/homebrew/>`_ to install thoses dependencies::
+
+    brew install cython autoconf automake libtool pkg-config mercurial
+    brew link libtool
+    brew link mercurial
+
+Ensure that everything is ok before starting the second step!
 
 Compile the distribution
 ------------------------
@@ -40,24 +52,11 @@ Create an Xcode project
 We provide a script that create an initial xcode project to start with (replace
 test with that you want. Must be a name without any space / weird chars)::
 
-    $ tools/create-xcode-project.sh test
+    $ tools/create-xcode-project.sh test /path/to/your/appdir
 
 Now you can open the Xcode project::
 
     $ open app-test/test.xcodeproj
-
-
-Populate the Xcode project
---------------------------
-
-Now that you have an Xcode project created, you must copy your application
-source code into the xcode project. We also made a script for it, and will
-automatically compile py to pyo, and remove all previous py/pyc. Don't work on
-that directory, prefer to re-run the populate command instead::
-
-    $ tools/populate-project.sh test /path/to/your/appdir
-
-The application directory is where the main.py is located.
 
 
 Customize
@@ -72,6 +71,9 @@ You can customize the build in many ways:
    then check the `Link Binary With Libraries`. You can remove the libraries
    not used by your application.
 #. Change the icon, orientation, etc... According to the Apple policy :)
+#. Go to the settings panel > build, search for "strip" options, and
+   triple-check that they are all set to NO. Stripping is not working with
+   Python dynamic modules, and will strip needed symbols.
 
 
 Known issues
@@ -111,4 +113,4 @@ Did you already submit a Kivy application to the App store ?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Yes, check `Defletouch on iTunes <http://itunes.apple.com/us/app/deflectouch/id505729681>`_
- 
+

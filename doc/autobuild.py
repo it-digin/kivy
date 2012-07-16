@@ -7,6 +7,7 @@ Be careful if you change anything in !
 '''
 
 ignore_list = (
+    'kivy._event',
     'kivy.factory_registers',
     'kivy.graphics.buffer',
     'kivy.graphics.vbo',
@@ -45,6 +46,7 @@ import kivy.modules.recorder
 import kivy.network.urlrequest
 import kivy.support
 import kivy.input.recorder
+import kivy.interactive
 from kivy.factory import Factory
 
 # force loading of all classes from factory

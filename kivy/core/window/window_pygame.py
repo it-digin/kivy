@@ -7,7 +7,7 @@ __all__ = ('WindowPygame', )
 # fail early if possible
 import pygame
 
-from . import WindowBase
+from kivy.core.window import WindowBase
 from kivy.core import CoreCriticalException
 from os import environ
 from os.path import exists, join
@@ -103,9 +103,10 @@ class WindowPygame(WindowBase):
 
         # set window icon before calling set_mode
         try:
-            filename_icon = Config.get('kivy', 'window_icon')
+            #filename_icon = Config.get('kivy', 'window_icon')
+            filename_icon = self.icon or Config.get('kivy', 'window_icon')
             if filename_icon == '':
-                logo_size = 512 if platform() == 'darwin' else 32
+                logo_size = 512 if platform() == 'macosx' else 32
                 filename_icon = join(kivy_home_dir, 'icon', 'kivy-icon-%d.png' %
                         logo_size)
             self.set_icon(filename_icon)
@@ -164,6 +165,7 @@ class WindowPygame(WindowBase):
             if im is None:
                 raise Exception('Unable to load window icon (not found)')
             pygame.display.set_icon(im)
+            super(WindowPygame, self).set_icon(filename)
         except:
             Logger.exception('WinPygame: unable to set icon')
 
@@ -182,7 +184,10 @@ class WindowPygame(WindowBase):
         Logger.debug('Window: Screenshot saved at <%s>' % filename)
         return filename
 
-    def on_keyboard(self, key, scancode=None, unicode=None, modifier=None):
+    def on_keyboard(self, key,
+        scancode=None, codepoint=None, modifier=None, **kwargs):
+
+        codepoint = codepoint or kwargs.get('unicode')
         # Quit if user presses ESC or the typical OSX shortcuts CMD+q or CMD+w
         # TODO If just CMD+w is pressed, only the window should be closed.
         is_osx = platform() == 'darwin'
@@ -190,7 +195,8 @@ class WindowPygame(WindowBase):
             stopTouchApp()
             self.close()  #not sure what to do here
             return True
-        super(WindowPygame, self).on_keyboard(key, scancode, unicode, modifier)
+        super(WindowPygame, self).on_keyboard(key, scancode,
+            codepoint=codepoint, modifier=modifier)
 
     def flip(self):
         pygame.display.flip()
@@ -215,10 +221,11 @@ class WindowPygame(WindowBase):
 
             # mouse move
             elif event.type == pygame.MOUSEMOTION:
+                x, y = event.pos
+                self.mouse_pos = x, self.system_size[1] - y
                 # don't dispatch motion if no button are pressed
                 if event.buttons == (0, 0, 0):
                     continue
-                x, y = event.pos
                 self._mouse_x = x
                 self._mouse_y = y
                 self._mouse_meta = self.modifiers
@@ -279,8 +286,9 @@ class WindowPygame(WindowBase):
                 pass
 
             # drop file (pygame patch needed)
-            elif event.type == pygame.USEREVENT and hasattr(pygame,
-                'USEREVENT_DROPFILE') and event.code == pygame.USEREVENT_DROPFILE:
+            elif event.type == pygame.USEREVENT and \
+                hasattr(pygame, 'USEREVENT_DROPFILE') and \
+                event.code == pygame.USEREVENT_DROPFILE:
                 self.dispatch('on_dropfile', event.filename)
 
             '''

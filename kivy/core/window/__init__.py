@@ -191,12 +191,21 @@ class WindowBase(EventDispatcher):
             Fired when the :class:`Window` is beeing rotated
         `on_close`:
             Fired when the :class:`Window` is closed
-        `on_keyboard`: key, scancode, unicode, modifier
+        `on_keyboard`: key, scancode, codepoint, modifier
             Fired when the keyboard is in action
-        `on_key_down`: key, scancode, unicode
+            .. versionchanged:: 1.3.0
+                The *unicode* parameter has be deprecated in favor of
+                codepoint, and will be removed completely in future versions
+        `on_key_down`: key, scancode, codepoint
             Fired when a key is down
-        `on_key_up`: key, scancode, unicode
+            .. versionchanged:: 1.3.0
+                The *unicode* parameter has be deprecated in favor of
+                codepoint, and will be removed completely in future versions
+        `on_key_up`: key, scancode, codepoint
             Fired when a key is up
+            .. versionchanged:: 1.3.0
+                The *unicode* parameter has be deprecated in favor of
+                codepoint, and will be removed completely in future versions
         `on_dropfile`: str
             Fired when a file is dropped on the application
     '''
@@ -228,6 +237,8 @@ class WindowBase(EventDispatcher):
     default to None. When created, the parent is set to the window itself.
     You must take care of it if you are doing recursive check.
     '''
+
+    icon = StringProperty()
 
     def _get_modifiers(self):
         return self._modifiers
@@ -341,7 +352,10 @@ class WindowBase(EventDispatcher):
     def _get_system_size(self):
         return self._size
 
-    system_size = AliasProperty(_get_system_size, _set_system_size, bind=('_size', ))
+    system_size = AliasProperty(
+            _get_system_size,
+            _set_system_size,
+            bind=('_size', ))
     '''Real size of the window, without taking care of the rotation.
     '''
 
@@ -350,7 +364,13 @@ class WindowBase(EventDispatcher):
     the screen size will not change, and use the current one to set the app
     fullscreen
 
-    .. versionadded:: 1.1.2
+    .. versionadded:: 1.2.0
+    '''
+
+    mouse_pos = ObjectProperty([0, 0])
+    '''2d position of the mouse within the window.
+
+    .. versionadded:: 1.2.0
     '''
 
     top = NumericProperty(None, allownone=True)
@@ -359,7 +379,6 @@ class WindowBase(EventDispatcher):
     render_context = ObjectProperty(None)
     canvas = ObjectProperty(None)
     title = StringProperty('Kivy')
-
 
     def __new__(cls, **kwargs):
         if cls.__instance is None:
@@ -396,7 +415,8 @@ class WindowBase(EventDispatcher):
 
         # create a trigger for update/create the window when one of window
         # property changes
-        self.trigger_create_window = Clock.create_trigger(self.create_window, -1)
+        self.trigger_create_window = Clock.create_trigger(
+                self.create_window, -1)
 
         # set the default window parameter according to the configuration
         if 'fullscreen' not in kwargs:
@@ -427,7 +447,9 @@ class WindowBase(EventDispatcher):
         super(WindowBase, self).__init__(**kwargs)
 
         # bind all the properties that need to recreate the window
-        for prop in ('fullscreen', 'position', 'top', 'left', '_size', 'system_size'):
+        for prop in (
+                'fullscreen', 'position', 'top',
+                'left', '_size', 'system_size'):
             self.bind(**{prop: self.trigger_create_window})
 
         # init privates
@@ -507,9 +529,7 @@ class WindowBase(EventDispatcher):
                 # on other platform, window are recreated, we need to reload.
                 from kivy.graphics.context import get_context
                 get_context().reload()
-                def ask_update(dt):
-                    self.canvas.ask_update()
-                Clock.schedule_once(ask_update, 0)
+                Clock.schedule_once(lambda x: self.canvas.ask_update(), 0)
 
         # ensure the gl viewport is correct
         self.update_viewport()
@@ -573,7 +593,7 @@ class WindowBase(EventDispatcher):
 
         .. versionadded:: 1.0.5
         '''
-        pass
+        self.icon = filename
 
     def to_widget(self, x, y, initial=True, relative=False):
         return (x, y)
@@ -700,7 +720,7 @@ class WindowBase(EventDispatcher):
                 elif key == 'center_y':
                     w.center_y = value * height
 
-    def screenshot(self, name='screenshot%(counter)04d.jpg'):
+    def screenshot(self, name='screenshot%(counter)04d.png'):
         '''Save the actual displayed image in a file
         '''
         i = 0
@@ -734,21 +754,34 @@ class WindowBase(EventDispatcher):
         '''Event called when mouse is moving, with buttons pressed'''
         pass
 
-    def on_keyboard(self, key, scancode=None, unicode=None, modifier=None):
+    def on_keyboard(self, key,
+        scancode=None, codepoint=None, modifier=None ,**kwargs):
         '''Event called when keyboard is in action
 
         .. warning::
-            Some providers may omit `scancode`, `unicode` and/or `modifier`!
+            Some providers may omit `scancode`, `codepoint` and/or `modifier`!
         '''
-        pass
+        if 'unicode' in kwargs:
+            Logger.warning("The use of the unicode parameter is deprecated, "
+                "and will be removed in future versions. Use codepoint "
+                "instead, which has identical semantics.")
 
-    def on_key_down(self, key, scancode=None, unicode=None, modifier=None):
+
+    def on_key_down(self, key,
+        scancode=None, codepoint=None, modifier=None, **kwargs):
         '''Event called when a key is down (same arguments as on_keyboard)'''
-        pass
+        if 'unicode' in kwargs:
+            Logger.warning("The use of the unicode parameter is deprecated, "
+                "and will be removed in future versions. Use codepoint "
+                "instead, which has identical semantics.")
 
-    def on_key_up(self, key, scancode=None, unicode=None, modifier=None):
+    def on_key_up(self, key,
+        scancode=None, codepoint=None, modifier=None, **kwargs):
         '''Event called when a key is up (same arguments as on_keyboard)'''
-        pass
+        if 'unicode' in kwargs:
+            Logger.warning("The use of the unicode parameter is deprecated, "
+                "and will be removed in future versions. Use codepoint "
+                "instead, which has identical semantics.")
 
     def on_dropfile(self, filename):
         '''Event called when a file is dropped on the application.
@@ -759,7 +792,7 @@ class WindowBase(EventDispatcher):
             pygame. But this will be a place for a further evolution (ios,
             android etc.)
 
-        .. versionadded:: 1.1.2
+        .. versionadded:: 1.2.0
         '''
         pass
 

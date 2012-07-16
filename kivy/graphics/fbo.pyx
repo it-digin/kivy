@@ -41,7 +41,7 @@ and canvas where the fbo is putted will be automaticly updated too.
 Reloading the FBO content
 -------------------------
 
-.. versionadded:: 1.1.2
+.. versionadded:: 1.2.0
 
 If the OpenGL context is lost, then the FBO is lost too. You need to reupload
 data on it yourself. Use the :func:`Fbo.add_reload_observer` to add a reloading
@@ -164,7 +164,6 @@ cdef class Fbo(RenderContext):
         get_context().dealloc_fbo(self)
 
     cdef void delete_fbo(self):
-        print 'XXXD Delete fbo', self
         self._texture = None
         get_context().dealloc_fbo(self)
         self.buffer_id = -1
@@ -245,7 +244,7 @@ cdef class Fbo(RenderContext):
 
         # if asked, push the viewport
         if self._push_viewport:
-            glGetIntegerv(GL_VIEWPORT, <GLint *>&self._viewport)
+            glGetIntegerv(GL_VIEWPORT, <GLint *>self._viewport)
             glViewport(0, 0, self._width, self._height)
 
     cpdef release(self):
@@ -306,7 +305,7 @@ cdef class Fbo(RenderContext):
         '''Add a callback to be called after the whole graphics context have
         been reloaded. This is where you can reupload your custom data in GPU.
 
-        .. versionadded:: 1.1.2
+        .. versionadded:: 1.2.0
 
         :Parameters:
             `callback`: func(context) -> return None
@@ -318,7 +317,7 @@ cdef class Fbo(RenderContext):
         '''Remove a callback from the observer list, previously added by
         :func:`add_reload_observer`.
 
-        .. versionadded:: 1.1.2
+        .. versionadded:: 1.2.0
 
         '''
         for cb in self.observers[:]:

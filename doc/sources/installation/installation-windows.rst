@@ -1,13 +1,23 @@
+.. _installation_windows:
+
 Installation on Windows
 =======================
 
 For Windows, we provide what we call a 'portable package'. You don't have
 to install anything "system" wide. Just unzip & run:
 
-    #. Download the latest version from http://kivy.org/#downloads
-    #. Unzip the package
-    #. Then, in the unzipped package, you have a script called `kivy.bat`,
-       use it for launching any kivy application as described below
+#. Download the latest version from http://kivy.org/#download
+
+    .. image:: images/win-step1.png
+        :scale: 50%
+
+#. Unzip the package
+
+    .. image:: images/win-step3.png
+        :scale: 50%
+
+#. Then, in the unzipped package, you have a script called `kivy.bat`,
+   use it for launching any kivy application as described below
 
 
 .. _windows-run-app:
@@ -20,15 +30,30 @@ Send-to method
 
 You can launch a .py file with our Python using the Send-to menu:
 
-    #. Create a shortcut of the kivy.bat
-    #. Open the explorer, and to go the address 'shell:sendto'
-    #. Move the kivy.bat's shortcut to this directory
-    #. (optional) rename it to Kivy <kivy-version>
+#. Copy the kivy.bat in the Clipboard
 
-Then, you can execute application by doing:
+    .. image:: images/win-step4.png
 
-    #. Right click on the .py file
-    #. Select Send-to > Kivy <version>
+#. Open the explorer, and to go the address 'shell:sendto'
+
+    .. image:: images/win-step5.png
+
+#. You should get the special windows directory SendTo
+
+    .. image:: images/win-step6.png
+
+#. Paste the previously copied kivy.bat **as a shortcut**
+
+    .. image:: images/win-step7.png
+
+#. Rename it to Kivy <kivy-version>
+
+    .. image:: images/win-step8.png
+
+Then, you can execute application by doing a right click on the .py file ->
+"Send To" -> "Kivy <version>".
+
+    .. image:: images/win-step9.png
 
 Double-click method
 ~~~~~~~~~~~~~~~~~~~
@@ -86,6 +111,31 @@ Also, all other scripts and binaries are available, such as:
     * gst-inspect-0.10
 
 
+Use development Kivy
+--------------------
+
+.. warning::
+
+    Using the latest development version can be risky. You might encounter
+    issue during the development. If you hit any bug, please report it.
+
+If you want to use the latest development version of Kivy, you can follow theses step:
+
+#. Download and install Kivy for windows as the explained before
+#. Go into the portable Kivy directory, where is located Python, Mingw, kivy.bat etc.
+#. Rename the kivy directory to kivy.stable
+#. Go on github, and download the `latest development version of Kivy <https://github.com/kivy/kivy/zipball/master>`_
+#. Extract the zip into the Kivy portable directory
+#. Rename the directory named "kivy-<some hash>" to just "kivy"
+#. Launch kivy.bat
+#. Go to the Kivy portable directory/kivy
+#. Type::
+
+    make force
+
+#. That's all, you have a latest development version!
+
+
 .. _winpackagecontents:
 
 Package Contents
@@ -98,7 +148,7 @@ The latest Windows package contains:
     * Glew 1.5.7
     * Pygame 1.9.2
     * Cython 0.14
-    * MingW
-    * Gstreamer
+    * MinGW
+    * GStreamer
     * Setuptools
 

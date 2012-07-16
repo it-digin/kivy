@@ -3,7 +3,7 @@ Properties
 ==========
 
 The *Properties* classes are used when you create a
-:class:`~kivy.uix.widget.Widget`.
+:class:`~kivy.event.EventDispatcher`.
 
 .. warning::
         Kivy's Properties are **not to be confused** with Python's
@@ -25,11 +25,125 @@ Kivy's property classes support:
         You can bind your own function as a callback to changes of a
         :class:`Property`. If, for example, you want a piece of code to be
         called when a widget's :class:`~kivy.uix.widget.Widget.pos` property
-        changes, you can :class:`~kivy.uix.widget.Widget.bind` a function to it.
+        changes, you can :class:`~kivy.event.EventDispatcher.bind` a function to
+        it.
 
     Better Memory Management
         The same instance of a property is shared across multiple widget
         instances.
+
+Comparaison Python / Kivy
+-------------------------
+
+Basic example
+~~~~~~~~~~~~~
+
+As an example, let's see some comparaison between Python and Kivy properties.
+Let's create a Python class with 'a' as a float::
+
+    class MyClass(object):
+        def __init__(self, a=1):
+            super(MyClass, self).__init__()
+            self.a = a
+
+With Kivy, you can do::
+
+    class MyClass(EventDispatcher):
+        a = NumericProperty(1)
+
+
+Value checking
+~~~~~~~~~~~~~~
+
+If you wanted to add some check like a minimum / maximum value allowed for a
+property, here is a possible implementation in Python::
+
+    class MyClass(object):
+        def __init__(self, a=1):
+            super(MyClass, self).__init__()
+            self._a = 0
+            self.a_min = 0
+            self.a_max = 0
+            self.a = a
+
+        def _get_a(self):
+            return self._a
+        def _set_a(self, value):
+            if value < self.a_min or value > self.a_max:
+                raise ValueError('a out of bounds')
+            self._a = a
+        a = property(_get_a, _set_a)
+
+The disadvantage is you have to do that work yourself. And it start to be
+complex if you have lot of properties.
+With Kivy, you can simplify like this::
+
+    class MyClass(EventDispatcher):
+        a = BoundedNumericProperty(1, min=0, max=100)
+
+That's all!
+
+
+Conclusion
+~~~~~~~~~~
+
+Even if we don't show a in-depth comparaison, you can understand how it's easier
+to create Kivy properties and use it than the standard one. See the next chapter
+to see how to use them :)
+
+
+Observe Properties changes
+--------------------------
+
+As we said in the beginning, Kivy's Properties implement the `Observer pattern
+<http://en.wikipedia.org/wiki/Observer_pattern>`_. That's mean you can
+:meth:`~kivy.event.EventDispatcher.bind` to a property, and have your own
+callback called when the value change.
+
+Multiple ways are available to observe the changes.
+
+Observe using bind()
+~~~~~~~~~~~~~~~~~~~~
+
+You can observe a property change by using the bind() method, outside the
+class::
+
+    class MyClass(EventDispatcher):
+        a = NumericProperty(1)
+
+    def callback(instance, value):
+        print 'My callback is call from', instance,
+        print 'and the a value changed to', value
+
+    ins = MyClass()
+    ins.bind(a=callback)
+
+    # at this point, any change to the a property will call your callback
+    ins.a = 5 # callback called
+    ins.a = 5 # callback not called, because the value didnt change
+    ins.a = -1 # callback called
+
+Observe using 'on_<propname>'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If you created the class yourself, you can use the 'on_<propname>' callback::
+
+    class MyClass(EventDispatcher):
+        a = NumericProperty(1)
+
+        def on_a(self, instance, value):
+            print 'My property a changed to', value
+
+.. warning::
+
+    Be careful with 'on_<propname>'. If you are creating a such callback on a
+    property you are inherit, you must not forget to call the possible subclass
+    function too.
+
+
+
+
+
 
 '''
 
@@ -205,10 +319,11 @@ cdef class Property:
 
         '''
         cdef dict storage = obj.__storage[self._name]
-        observers = storage['observers']
-        value = storage['value']
-        for observer in observers:
-            observer(obj, value)
+        cdef list observers = storage['observers']
+        if len(observers):
+            value = storage['value']
+            for observer in observers:
+                observer(obj, value)
 
 
 cdef class NumericProperty(Property):
@@ -227,6 +342,9 @@ cdef class NumericProperty(Property):
         File "properties.pyx", line 159, in kivy.properties.NumericProperty.check
         ValueError: NumericProperty accept only int/float
     '''
+    def __init__(self, defaultvalue=0, **kw):
+        super(NumericProperty, self).__init__(defaultvalue, **kw)
+
     cdef check(self, obj, value):
         if Property.check(self, obj, value):
             return True
@@ -241,6 +359,10 @@ cdef class StringProperty(Property):
 
     Only string or unicode are accepted.
     '''
+
+    def __init__(self, defaultvalue='', **kw):
+        super(StringProperty, self).__init__(defaultvalue, **kw)
+
     cdef check(self, obj, value):
         if Property.check(self, obj, value):
             return True
@@ -286,11 +408,6 @@ class ObservableList(list):
         list.__imul__(self, *largs)
         observable_list_dispatch(self)
 
-    def __add__(self, *largs):
-        cdef object result = list.__add__(self, *largs)
-        observable_list_dispatch(self)
-        return result
-
     def append(self, *largs):
         list.append(self, *largs)
         observable_list_dispatch(self)
@@ -326,6 +443,11 @@ cdef class ListProperty(Property):
 
     Only lists are allowed, tuple or any other classes are forbidden.
     '''
+    def __init__(self, defaultvalue=None, **kw):
+        defaultvalue = defaultvalue or []
+
+        super(ListProperty, self).__init__(defaultvalue, **kw)
+
     cpdef link(self, object obj, str name):
         Property.link(self, obj, name)
         storage = obj.__storage[self._name]
@@ -395,6 +517,11 @@ cdef class DictProperty(Property):
 
     Only dict are allowed, any other classes are forbidden.
     '''
+    def __init__(self, defaultvalue=None, **kw):
+        defaultvalue = defaultvalue or {}
+
+        super(DictProperty, self).__init__(defaultvalue, **kw)
+
     cpdef link(self, object obj, str name):
         Property.link(self, obj, name)
         storage = obj.__storage[self._name]
@@ -420,6 +547,9 @@ cdef class ObjectProperty(Property):
 
         To mark the property as changed, you must reassign a new python object.
     '''
+    def __init__(self, defaultvalue=None, **kw):
+        super(ObjectProperty, self).__init__(defaultvalue, **kw)
+
     cdef check(self, obj, value):
         if Property.check(self, obj, value):
             return True
@@ -431,6 +561,10 @@ cdef class ObjectProperty(Property):
 cdef class BooleanProperty(Property):
     '''Property that represents only boolean
     '''
+
+    def __init__(self, defaultvalue=True, **kw):
+        super(BooleanProperty, self).__init__(defaultvalue, **kw)
+
     cdef check(self, obj, value):
         if Property.check(self, obj, value):
             return True
@@ -608,7 +742,7 @@ cdef class OptionProperty(Property):
             raise ValueError('%s.%s is set to an invalid option %r. '
                              'Must be one of: %s' % (
                              obj.__class__.__name__,
-                             self.name, 
+                             self.name,
                              value, valid_options))
 
     property options:
