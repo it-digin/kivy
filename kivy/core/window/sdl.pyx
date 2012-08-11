@@ -157,8 +157,8 @@ def setup_window(width, height, use_fake, use_fullscreen):
     if SDL_Init(SDL_INIT_VIDEO) < 0:
         die()
 
-    # Set default orientation (force landscape for now)
-    SDL_SetHint(SDL_HINT_ORIENTATIONS, "LandscapeLeft LandscapeRight")
+    # Support all orientations
+    SDL_SetHint(SDL_HINT_ORIENTATIONS, "Portrait PortraitUpsideDown LandscapeLeft LandscapeRight")
 
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1)
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16)
@@ -182,7 +182,8 @@ def setup_window(width, height, use_fake, use_fullscreen):
     SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
     '''
 
-    win = SDL_CreateWindow(NULL, 0, 0, width, height, win_flags)
+    # Create the window in Portrait mode first
+    win = SDL_CreateWindow(NULL, 0, 0, height, width, win_flags)
     if not win:
         die()
 
