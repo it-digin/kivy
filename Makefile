@@ -1,4 +1,4 @@
-PYTHON = python
+PYTHON = python2.6
 CHECKSCRIPT = kivy/tools/pep8checker/pep8kivy.py
 KIVY_DIR = kivy/
 NOSETESTS = nosetests
